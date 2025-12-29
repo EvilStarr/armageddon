@@ -1,0 +1,37 @@
+Key update since “the old days”: AWS WAF logging can go directly to CloudWatch Logs, S3, or Kinesis Data Firehose, 
+and you can associate one destination per Web ACL. Also, the destination name must start with aws-waf-logs-. 
+
+
+Terraform supports this with aws_wafv2_web_acl_logging_configuration. 
+Terraform Registry
+
+Below is Lab 1C-Bonus-E (continued): WAF logging in Terraform (with toggles), plus verification commands.
+
+1) Add variables (append to variables.tf)
+variable "waf_log_destination" {
+  description = "Choose ONE destination per WebACL: cloudwatch | s3 | firehose"
+  type        = string
+  default     = "cloudwatch"
+}
+
+variable "waf_log_retention_days" {
+  description = "Retention for WAF CloudWatch log group."
+  type        = number
+  default     = 14
+}
+
+variable "enable_waf_sampled_requests_only" {
+  description = "If true, students can optionally filter/redact fields later. (Placeholder toggle.)"
+  type        = bool
+  default     = false
+}
+
+
+2) Add file: bonus_b_waf_logging.tf (Look in Folder)
+
+This provides three skeleton options (CloudWatch / S3 / Firehose). Students choose one via var.waf_log_destination.
+
+
+
+
+
