@@ -41,8 +41,42 @@ Optional extra-credit: use Bedrock Agents + Knowledge Base to ingest your runboo
 # https://aws.amazon.com/blogs/machine-learning/automate-it-operations-with-amazon-bedrock-agents/?utm_source=chatgpt.com
 
 3) Terraform Skeleton Add-on (Chewbacca naming)
-Add file: bonus_G_bedrock_autoreport.tf
+Add file: bonus_G_bedrock_autoreport.tf (Folder)
 
+4) Lambda “IncidentReporter” skeleton (Python)
+Create handler.py and zip it for Terraform. (Folder)
+
+This uses:
+CloudWatch Logs Insights StartQuery/GetQueryResults 
+Bedrock invoke_model via bedrock-runtime client
+
+Note: Bedrock request body differs by model family; the framework is correct but students must adapt to the chosen model’s request schema. AWS documents InvokeModel and the runtime client.
+Documentation: https://docs.aws.amazon.com/bedrock/latest/userguide/inference-invoke.html?utm_source=chatgpt.com
+
+5) Bedrock Prompt Pack (so reports don’t hallucinate)
+Include these rules in the prompt (non-negotiable):
+    “Use ONLY evidence”
+    “If unknown, say Unknown”
+    “Include confidence levels”
+    “Recommend next evidence to pull”
+
+And add a “grading” rubric line:
+    “Report must cite which query/field supports each key claim”
+
+6) Advanced grading criteria (for your top students)
+They pass “advanced” if:
+    They produce both JSON evidence + Markdown report
+    Report has no invented claims
+    Report includes root cause classification that matches injected failure
+    They redact secrets (password never appears)
+    They add a second pass: “preventive actions” tied to evidence (e.g., rotation automation, SG drift detection)
+
+Optional upgrade: Bedrock Agents + Knowledge Base (very real)
+You need to store:
+    runbooks (Markdown)
+    common incident patterns
+        in a Knowledge Base, then an Agent can recommend steps. AWS has a reference blog for automating IT ops with Agents.
+Documenation: https://aws.amazon.com/blogs/machine-learning/automate-it-operations-with-amazon-bedrock-agents/?utm_source=chatgpt.com
 
 
 
