@@ -1,0 +1,33 @@
+To check Lab 1a, run the following:
+
+1) From your workstation (metadata checks; role attach + secret exists)
+
+    chmod +x gate_secrets_and_role.sh
+    REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 SECRET_ID=my-db-secret ./gate_secrets_and_role.sh
+
+From inside the EC2 instance (prove the instance role can actually read the secret)
+
+    CHECK_SECRET_VALUE_READ=true REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 SECRET_ID=my-db-secret ./gate_secrets_and_role.sh
+
+Strict mode: require rotation enabled
+
+    REQUIRE_ROTATION=true REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 SECRET_ID=my-db-secret ./gate_secrets_and_role.sh
+
+
+2) Basic: verify RDS isn’t public + SG-to-SG rule exists
+
+    chmod +x gate_network_db.sh
+    REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 DB_ID=mydb01 ./gate_network_db.sh
+
+
+Strict: also verify DB subnets are private (no IGW route)
+
+CHECK_PRIVATE_SUBNETS=true REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 DB_ID=mydb01 ./gate_network_db.sh
+
+If endpoint port discovery fails, override it
+
+DB_PORT=5432 REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 DB_ID=mydb01 ./gate_network_db.sh
+
+
+
+
