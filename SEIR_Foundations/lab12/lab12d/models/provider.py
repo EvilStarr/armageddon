@@ -52,10 +52,11 @@ They do not execute provider logic.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from models.base_model import BaseModel
 from models.enums import (
     IndicatorType,
     PlatformType,
@@ -72,8 +73,8 @@ from models.time_utils import utc_now
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ProviderIdentity:
+@dataclass
+class ProviderIdentity(BaseModel):
     """
     Represents the identity of a security provider.
 
@@ -102,8 +103,8 @@ class ProviderIdentity:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ProviderCapabilities:
+@dataclass
+class ProviderCapabilities(BaseModel):
     """
     Describes what a provider is capable of detecting.
 
@@ -135,8 +136,8 @@ class ProviderCapabilities:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ProviderHealth:
+@dataclass
+class ProviderHealth(BaseModel):
     """
     Represents the operational health of a provider.
 
@@ -164,8 +165,8 @@ class ProviderHealth:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ProviderStatistics:
+@dataclass
+class ProviderStatistics(BaseModel):
     """
     Operational statistics collected for one provider.
 
@@ -189,8 +190,8 @@ class ProviderStatistics:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ProviderConfiguration:
+@dataclass
+class ProviderConfiguration(BaseModel):
     """
     Configuration shared by provider implementations.
 
@@ -273,8 +274,8 @@ class ProviderConfiguration:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class Provider:
+@dataclass
+class Provider(BaseModel):
     """
     Represents one security provider within the Gen2X platform.
 
@@ -308,12 +309,15 @@ class Provider:
     # Validation
     # =========================================================================
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         """
         Validate the Provider model.
 
         Domain models should protect themselves from
         obviously invalid state.
+
+        BaseModel.__post_init__() calls this hook automatically
+        after construction.
         """
 
         self.identity.name = self.identity.name.strip()
@@ -553,66 +557,15 @@ class Provider:
     # =========================================================================
     # Serialization
     # =========================================================================
-
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the Provider into a serializable dictionary.
-        """
-
-        return {
-
-            "identity": asdict(self.identity),
-
-            "capabilities": {
-
-                "supported_indicators": [
-
-                    indicator.value
-
-                    for indicator in
-                    self.capabilities.supported_indicators
-
-                ],
-
-                "supported_conditions": [
-
-                    condition.value
-
-                    for condition in
-                    self.capabilities.supported_conditions
-
-                ],
-
-                "supports_batch":
-                    self.capabilities.supports_batch,
-
-                "supports_streaming":
-                    self.capabilities.supports_streaming,
-
-                "supports_realtime":
-                    self.capabilities.supports_realtime,
-
-                "supports_historical_queries":
-                    self.capabilities.supports_historical_queries,
-
-                "max_batch_size":
-                    self.capabilities.max_batch_size,
-
-            },
-
-            "configuration": asdict(
-                self.configuration
-            ),
-
-            "health": asdict(
-                self.health
-            ),
-
-            "statistics": asdict(
-                self.statistics
-            ),
-
-        }
+    #
+    # to_dict(), to_json(), and from_dict() are inherited from BaseModel.
+    #
+    # The inherited implementations understand nested models,
+    # enumerations, and datetimes in both directions:
+    #
+    #     provider == Provider.from_dict(provider.to_dict())
+    #
+    # =========================================================================
 
 
 # =============================================================================

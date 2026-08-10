@@ -29,11 +29,12 @@ testable, and reusable across providers.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime
 from hashlib import sha256
 from typing import Any
 
+from models.base_model import BaseModel
 from models.enums import (
     IndicatorSource,
     IndicatorType,
@@ -52,8 +53,8 @@ from models.time_utils import utc_now
 # =============================================================================
 
 
-@dataclass(slots=True)
-class EvidenceIdentity:
+@dataclass
+class EvidenceIdentity(BaseModel):
     """
     Identifies one provider observation.
 
@@ -125,8 +126,8 @@ class EvidenceIdentity:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class EvidenceIndicator:
+@dataclass
+class EvidenceIndicator(BaseModel):
     """
     Represents what the provider observed.
 
@@ -149,8 +150,8 @@ class EvidenceIndicator:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class EvidenceSource:
+@dataclass
+class EvidenceSource(BaseModel):
     """
     Describes where the observation originated.
 
@@ -180,8 +181,8 @@ class EvidenceSource:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class EvidenceContext:
+@dataclass
+class EvidenceContext(BaseModel):
     """
     Provides additional context for an observation.
 
@@ -265,8 +266,8 @@ class EvidenceContext:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ThreatEvidence:
+@dataclass
+class ThreatEvidence(BaseModel):
     """
     Represents one normalized security observation.
 
@@ -299,9 +300,12 @@ class ThreatEvidence:
     # Validation
     # =========================================================================
 
-    def __post_init__(self) -> None:
+    def validate(self) -> None:
         """
         Validate the ThreatEvidence model.
+
+        BaseModel.__post_init__() calls this hook automatically
+        after construction.
         """
 
         self.identity.provider_name = (
@@ -493,50 +497,15 @@ class ThreatEvidence:
     # =========================================================================
     # Serialization
     # =========================================================================
-
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert ThreatEvidence into a serializable dictionary.
-
-        Future versions may implement from_dict() and JSON
-        serialization.
-        """
-
-        return {
-
-            "identity": asdict(self.identity),
-
-            "indicator": asdict(self.indicator),
-
-            "source": asdict(self.source),
-
-            "context": {
-
-                "severity":
-                    self.context.severity.value,
-
-                "confidence":
-                    self.context.confidence.value,
-
-                "provider_trust":
-                    self.context.provider_trust.value,
-
-                "expires_at":
-                    (
-                        self.context.expires_at.isoformat()
-                        if self.context.expires_at
-                        else None
-                    ),
-
-                "tags":
-                    sorted(self.context.tags),
-
-                "notes":
-                    self.context.notes,
-
-            },
-
-        }
+    #
+    # to_dict(), to_json(), and from_dict() are inherited from BaseModel.
+    #
+    # The inherited implementations understand nested models,
+    # enumerations, and datetimes in both directions:
+    #
+    #     evidence == ThreatEvidence.from_dict(evidence.to_dict())
+    #
+    # =========================================================================
 
 
 # =============================================================================
