@@ -65,20 +65,54 @@ from __future__ import annotations
 
 import copy
 import json
-from dataclasses import asdict
 from dataclasses import dataclass
 from dataclasses import fields
-from dataclasses import is_dataclass
 from typing import Any
 from typing import Dict
 from typing import Type
 from typing import TypeVar
+
+try:
+    from pydantic import TypeAdapter
+except ImportError as import_error:  # pragma: no cover
+    raise ImportError(
+        "The Gen2X models package requires pydantic. "
+        "Install dependencies with: pip install -r requirements.txt"
+    ) from import_error
 
 # ============================================================================
 # Generic Type Variable
 # ============================================================================
 
 T = TypeVar("T", bound="BaseModel")
+
+# ============================================================================
+# Serialization Adapters
+# ============================================================================
+#
+# pydantic TypeAdapters understand dataclasses, enumerations, datetimes,
+# and nested combinations of all three — in both directions.
+#
+# Building an adapter requires inspecting the class, so adapters are
+# cached per model class rather than rebuilt on every call.
+#
+# ============================================================================
+
+_ADAPTERS: dict[type, TypeAdapter] = {}
+
+
+def _adapter_for(model_class: type) -> TypeAdapter:
+    """
+    Return the cached pydantic adapter for one model class.
+    """
+
+    adapter = _ADAPTERS.get(model_class)
+
+    if adapter is None:
+        adapter = TypeAdapter(model_class)
+        _ADAPTERS[model_class] = adapter
+
+    return adapter
 
 
 # ============================================================================
@@ -165,15 +199,29 @@ class BaseModel:
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Convert this dataclass into a dictionary.
+        Convert this dataclass into a JSON-safe dictionary.
 
-        Nested dataclasses are automatically converted.
+        The output contains only JSON-compatible values:
+
+            • Nested models become dictionaries
+
+            • Enumerations become their string values
+
+            • Datetimes become ISO-8601 strings
+
+            • Sets become lists
+
+        The output of to_dict() can always be passed back into
+        from_dict() to reconstruct an equal object.
 
         Returns
         -------
         dict
         """
-        return asdict(self)
+        return _adapter_for(type(self)).dump_python(
+            self,
+            mode="json",
+        )
 
     # ----------------------------------------------------------------------
     # JSON Serialization
@@ -209,10 +257,20 @@ class BaseModel:
         """
         Construct an object from a dictionary.
 
+        Values are converted back into their declared field types:
+
+            • Nested dictionaries become nested models
+
+            • Enum values become enumeration members
+
+            • ISO-8601 strings become datetimes
+
+            • Lists become sets where the field declares a set
+
         Unknown fields are ignored.
 
-        Missing required fields will raise
-        the normal dataclass exception.
+        Invalid or missing required values raise ValueError
+        (pydantic's ValidationError is a ValueError).
 
         Returns
         -------
@@ -227,7 +285,7 @@ class BaseModel:
             if key in valid_fields
         }
 
-        return cls(**filtered)
+        return _adapter_for(cls).validate_python(filtered)
 
     # ----------------------------------------------------------------------
     # Object Copy
