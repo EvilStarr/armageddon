@@ -428,63 +428,63 @@ Only then start the playbook.
 
 # Chewbacca's Commentary 🐾
 
-Installation
-
-is not
-
-the lab.
-
-Installation
-
-is the part
-
-where your machine
-
-agrees
-
-to speak
-
-the same language
-
-as everyone else's.
-
-Nine tests.
-
-One vocabulary.
-
-One base model.
-
-If the tests pass,
-
-you and the platform
-
-now agree
-
-on what words mean.
-
-That agreement
-
-is the entire point
-
-of Agent 10.
-
-Now go build
-
-your first model.
-
-And when it fails —
-
-and it will fail —
-
-read the error.
-
-The contract
-
-is not rejecting you.
-
-It is teaching you.
-
-— Chewbacca
-Chief Wookiee Architect
-Onboarding & Environment Provisioning
-Porg Sushi Welcome Committee
+        Installation
+        
+        is not
+        
+        the lab.
+        
+        Installation
+        
+        is the part
+        
+        where your machine
+        
+        agrees
+        
+        to speak
+        
+        the same language
+        
+        as everyone else's.
+        
+        Nine tests.
+        
+        One vocabulary.
+        
+        One base model.
+        
+        If the tests pass,
+        
+        you and the platform
+        
+        now agree
+        
+        on what words mean.
+        
+        That agreement
+        
+        is the entire point
+        
+        of Agent 10.
+        
+        Now go build
+        
+        your first model.
+        
+        And when it fails —
+        
+        and it will fail —
+        
+        read the error.
+        
+        The contract
+        
+        is not rejecting you.
+        
+        It is teaching you.
+        
+        — Chewbacca
+        Chief Wookiee Architect
+        Onboarding & Environment Provisioning
+        Porg Sushi Welcome Committee
