@@ -305,6 +305,7 @@ from .threat_enums import (
     ThreatDisposition,
     ThreatActorType,
     ThreatActivityPattern,
+    InvestigationStatus,
 )
 
 # =============================================================================
@@ -320,6 +321,7 @@ from .report_enums import (
     ReportStatus,
     ReportFormat,
     ReportAudience,
+    ReportTechnicalLevel,
     FindingSeverity,
     RecommendationPriority,
     RecommendationCategory,
@@ -337,6 +339,7 @@ from .response_enums import (
     ResponseAction,
     ResponseMode,
     ResponseApproval,
+    ApprovalMode,
     ResponseOwner,
     ResponsePriority,
     ResponseStatus,
@@ -446,6 +449,7 @@ __all__ = [
     "ThreatDisposition",
     "ThreatActorType",
     "ThreatActivityPattern",
+    "InvestigationStatus",
 
     # -------------------------------------------------------------------------
     # Report Enumerations
@@ -455,6 +459,7 @@ __all__ = [
     "ReportStatus",
     "ReportFormat",
     "ReportAudience",
+    "ReportTechnicalLevel",
     "FindingSeverity",
     "RecommendationPriority",
     "RecommendationCategory",
@@ -466,6 +471,7 @@ __all__ = [
     "ResponseAction",
     "ResponseMode",
     "ResponseApproval",
+    "ApprovalMode",
     "ResponseOwner",
     "ResponsePriority",
     "ResponseStatus",

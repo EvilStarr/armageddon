@@ -1490,6 +1490,133 @@ class ThreatActivityPattern(Gen2XEnum):
 
 
 # =============================================================================
+# Investigation Status
+# =============================================================================
+
+
+class InvestigationStatus(Gen2XEnum):
+    """
+    Describes the operational lifecycle of a security investigation.
+
+    InvestigationStatus answers one question:
+
+        "Where are we in the investigation?"
+
+    Unlike ThreatStatus, which describes the analytical workflow of one
+    threat, InvestigationStatus describes the operational case that a
+    human team manages.
+
+    Investigations are not perfectly linear.
+
+    New evidence may cause an investigation to move backward, reopen,
+    or continue after remediation.
+    """
+
+    # -------------------------------------------------------------------------
+    # Active Work
+    # -------------------------------------------------------------------------
+
+    NEW = "NEW"
+
+    EVIDENCE_COLLECTION = "EVIDENCE_COLLECTION"
+
+    ANALYSIS = "ANALYSIS"
+
+    INVESTIGATING = "INVESTIGATING"
+
+    MONITORING = "MONITORING"
+
+    # -------------------------------------------------------------------------
+    # Conclusion
+    # -------------------------------------------------------------------------
+
+    RESOLVED = "RESOLVED"
+
+    CLOSED = "CLOSED"
+
+    REOPENED = "REOPENED"
+
+    # -------------------------------------------------------------------------
+    # General
+    # -------------------------------------------------------------------------
+
+    UNKNOWN = "UNKNOWN"
+
+    def describe(self) -> str:
+        """
+        Return a human-readable explanation of the investigation status.
+        """
+
+        descriptions = {
+
+            InvestigationStatus.NEW:
+                "The investigation has been opened but work has not begun.",
+
+            InvestigationStatus.EVIDENCE_COLLECTION:
+                "Evidence is being collected from providers.",
+
+            InvestigationStatus.ANALYSIS:
+                "Collected evidence is being analyzed.",
+
+            InvestigationStatus.INVESTIGATING:
+                "Analysts are actively investigating.",
+
+            InvestigationStatus.MONITORING:
+                "The investigation remains open for observation.",
+
+            InvestigationStatus.RESOLVED:
+                "The underlying issue has been addressed.",
+
+            InvestigationStatus.CLOSED:
+                "The investigation has been administratively closed.",
+
+            InvestigationStatus.REOPENED:
+                "New information caused the investigation to reopen.",
+
+            InvestigationStatus.UNKNOWN:
+                "Investigation status has not yet been determined."
+
+        }
+
+        return descriptions[self]
+
+
+# =============================================================================
+# Chewbacca's Commentary 🐾
+#
+# Resolved
+#
+# is not
+#
+# closed.
+#
+# A resolved investigation
+# may remain open
+#
+# for monitoring,
+# verification,
+# or paperwork.
+#
+# And a closed investigation
+#
+# may reopen
+#
+# the moment
+#
+# new evidence appears.
+#
+# Good case management
+#
+# accepts
+#
+# that investigations
+#
+# have second acts.
+#
+# =============================================================================
+
+
+# =============================================================================
 # Public Module Interface
 # =============================================================================
 
@@ -1514,6 +1641,8 @@ __all__ = [
     "ThreatActorType",
 
     "ThreatActivityPattern",
+
+    "InvestigationStatus",
 
 ]
 

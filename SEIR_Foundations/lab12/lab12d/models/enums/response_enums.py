@@ -270,6 +270,56 @@ class ResponseApproval(Gen2XEnum):
 #
 # =============================================================================
 
+class ApprovalMode(Gen2XEnum):
+    """
+    Describes the approval requirement configured for a response.
+
+    ApprovalMode answers:
+
+        "What approval does this action require?"
+
+    ApprovalMode is configuration.
+
+    ResponseApproval is the current state of the decision.
+
+    Example
+
+        approval_mode   = ApprovalMode.SINGLE_APPROVER
+
+        approval_status = ResponseApproval.PENDING
+    """
+
+    NONE = "NONE"
+
+    SINGLE_APPROVER = "SINGLE_APPROVER"
+
+    DUAL_APPROVER = "DUAL_APPROVER"
+
+    CHANGE_BOARD = "CHANGE_BOARD"
+
+    UNKNOWN = "UNKNOWN"
+
+# =============================================================================
+#
+# Chewbacca's Commentary 🐾
+#
+# Mode is the rule.
+#
+# Status is the moment.
+#
+# "This action requires two approvers."
+#
+# is a rule.
+#
+# "One approver has said yes."
+#
+# is a moment.
+#
+# Keep rules and moments separate,
+# and audits become easy.
+#
+# =============================================================================
+
 class ResponseOwner(Gen2XEnum):
     """
     Describes who is accountable for a response.
@@ -455,6 +505,7 @@ __all__ = [
     "ResponseAction",
     "ResponseMode",
     "ResponseApproval",
+    "ApprovalMode",
     "ResponseOwner",
     "ResponsePriority",
     "ResponseStatus",

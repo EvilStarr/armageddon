@@ -959,6 +959,89 @@ class RecommendationCategory(Gen2XEnum):
 
 
 # =============================================================================
+# Report Technical Level
+# =============================================================================
+
+
+class ReportTechnicalLevel(Gen2XEnum):
+    """
+    Describes the depth of technical detail a report should contain.
+
+    ReportTechnicalLevel answers:
+
+        "How deep should the explanation go?"
+
+    Technical level complements ReportAudience.
+
+    Audience describes WHO reads the report.
+
+    Technical level describes HOW MUCH technical detail they receive.
+    """
+
+    EXECUTIVE = "EXECUTIVE"
+
+    STRATEGIC = "STRATEGIC"
+
+    OPERATIONAL = "OPERATIONAL"
+
+    TECHNICAL = "TECHNICAL"
+
+    FORENSIC = "FORENSIC"
+
+    UNKNOWN = "UNKNOWN"
+
+    def describe(self) -> str:
+        """Return a human-readable explanation of the technical level."""
+
+        descriptions = {
+            ReportTechnicalLevel.EXECUTIVE: (
+                "Business impact and decisions. Minimal technical detail."
+            ),
+            ReportTechnicalLevel.STRATEGIC: (
+                "Trends, risk posture, and planning-level detail."
+            ),
+            ReportTechnicalLevel.OPERATIONAL: (
+                "Actionable detail for day-to-day security operations."
+            ),
+            ReportTechnicalLevel.TECHNICAL: (
+                "Full technical findings, evidence, and remediation detail."
+            ),
+            ReportTechnicalLevel.FORENSIC: (
+                "Complete evidentiary detail suitable for legal or audit review."
+            ),
+            ReportTechnicalLevel.UNKNOWN: (
+                "The technical level has not been classified."
+            ),
+        }
+
+        return descriptions[self]
+
+
+# =============================================================================
+# Chewbacca's Commentary 🐶
+#
+# The same investigation
+#
+# can be explained
+#
+# in one sentence...
+#
+# or in forty pages.
+#
+# Neither is wrong.
+#
+# It depends on
+#
+# who is reading
+#
+# and what decision
+#
+# they must make.
+#
+# =============================================================================
+
+
+# =============================================================================
 # Public Module Interface
 # =============================================================================
 #
@@ -983,6 +1066,7 @@ __all__ = [
     "ReportStatus",
     "ReportFormat",
     "ReportAudience",
+    "ReportTechnicalLevel",
     "FindingSeverity",
     "RecommendationPriority",
     "RecommendationCategory",
