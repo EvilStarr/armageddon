@@ -41,8 +41,10 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
+# ThreatAssessment (the enum) is imported under an alias because this
+# module defines a ThreatAssessment dataclass of its own.
+from models.enums import ThreatAssessment as ThreatAssessmentType
 from models.enums import (
-    ThreatAssessmentType,
     ThreatCondition,
     ThreatConfidence,
     ThreatSeverity,
@@ -849,6 +851,252 @@ class Threat:
 
             self.touch()
 
+    # =============================================================================
+    # Threat Matching
+    # =============================================================================
+
+
+    def matches_condition(
+        self,
+        condition: ThreatCondition,
+    ) -> bool:
+        """
+        Return True when the threat matches the supplied condition.
+        """
+
+        return self.condition == condition
+
+
+    def matches_indicator(
+        self,
+        indicator_key: str,
+    ) -> bool:
+        """
+        Return True when the threat is associated with the
+        supplied indicator key.
+        """
+
+        if self.indicator_key is None:
+            return False
+
+        return (
+            self.indicator_key
+            == indicator_key.strip()
+        )
+
+
+    def matches_severity(
+        self,
+        severity: ThreatSeverity,
+    ) -> bool:
+        """
+        Return True when the threat has the supplied severity.
+        """
+
+        return self.severity == severity
+
+
+    def matches_confidence(
+        self,
+        confidence: ThreatConfidence,
+    ) -> bool:
+        """
+        Return True when the threat has the supplied confidence.
+        """
+
+        return self.confidence == confidence
+
+
+    # =============================================================================
+    # Context Matching
+    # =============================================================================
+
+
+    def affects_account(
+        self,
+        account_id: str,
+    ) -> bool:
+        """
+        Return True when the threat affects the supplied account.
+        """
+
+        if self.context.account_id is None:
+            return False
+
+        return (
+            self.context.account_id
+            == account_id.strip()
+        )
+
+
+    def affects_resource(
+        self,
+        resource_id: str,
+    ) -> bool:
+        """
+        Return True when the threat affects the supplied resource.
+        """
+
+        if self.context.resource_id is None:
+            return False
+
+        return (
+            self.context.resource_id
+            == resource_id.strip()
+        )
+
+
+    def affects_repository(
+        self,
+        repository: str,
+    ) -> bool:
+        """
+        Return True when the threat affects the supplied repository.
+        """
+
+        if self.context.repository is None:
+            return False
+
+        return (
+            self.context.repository.casefold()
+            == repository.strip().casefold()
+        )
+
+
+    def affects_user(
+        self,
+        user_id: str,
+    ) -> bool:
+        """
+        Return True when the threat affects the supplied identity.
+        """
+
+        if self.context.user_id is None:
+            return False
+
+        return (
+            self.context.user_id.casefold()
+            == user_id.strip().casefold()
+        )
+
+
+    # =============================================================================
+    # Description
+    # =============================================================================
+
+
+    def describe(self) -> str:
+        """
+        Return a concise human-readable description of the threat.
+
+        This method is intended for:
+
+            • Logs
+            • Diagnostics
+            • CLI output
+            • Testing
+
+        It is not a ThreatSummary.
+
+        ThreatSummary is a communication model intended for
+        human-facing reporting.
+        """
+
+        return (
+            f"{self.condition.value} "
+            f"[severity={self.severity.value}, "
+            f"confidence={self.confidence.value}, "
+            f"evidence={self.evidence_count}, "
+            f"providers={self.provider_count}]"
+        )
+
+
+    # =============================================================================
+    # Serialization
+    # =============================================================================
+
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Convert the Threat into a serializable dictionary.
+
+        Derived counts are included for convenience.
+
+        The underlying evidence_ids and provider_names remain
+        the authoritative provenance values.
+        """
+
+        return {
+            "identity": {
+                "threat_id":
+                    self.identity.threat_id,
+
+                "condition":
+                    self.identity.condition.value,
+
+                "indicator_key":
+                    self.identity.indicator_key,
+
+                "created_at":
+                    self.identity.created_at.isoformat(),
+
+                "updated_at":
+                    self.identity.updated_at.isoformat(),
+            },
+
+            "assessment": {
+                "severity":
+                    self.assessment.severity.value,
+
+                "confidence":
+                    self.assessment.confidence.value,
+
+                "assessment":
+                    self.assessment.assessment.value,
+            },
+
+            "context": {
+                "account_id":
+                    self.context.account_id,
+
+                "region":
+                    self.context.region,
+
+                "resource_id":
+                    self.context.resource_id,
+
+                "repository":
+                    self.context.repository,
+
+                "user_id":
+                    self.context.user_id,
+
+                "metadata":
+                    dict(self.context.metadata),
+            },
+
+            "provenance": {
+                "evidence_ids":
+                    sorted(
+                        self.provenance.evidence_ids
+                    ),
+
+                "provider_names":
+                    sorted(
+                        self.provenance.provider_names
+                    ),
+
+                "evidence_count":
+                    self.provenance.evidence_count,
+
+                "provider_count":
+                    self.provenance.provider_count,
+
+                "assessment_id":
+                    self.provenance.assessment_id,
+            },
+        }
+
 
 # =============================================================================
 #
@@ -963,253 +1211,6 @@ class Threat:
 #                                Porg Sushi Connoisseur
 #
 # =============================================================================
-
-
-# =============================================================================
-# Threat Matching
-# =============================================================================
-
-
-def matches_condition(
-    self,
-    condition: ThreatCondition,
-) -> bool:
-    """
-    Return True when the threat matches the supplied condition.
-    """
-
-    return self.condition == condition
-
-
-def matches_indicator(
-    self,
-    indicator_key: str,
-) -> bool:
-    """
-    Return True when the threat is associated with the
-    supplied indicator key.
-    """
-
-    if self.indicator_key is None:
-        return False
-
-    return (
-        self.indicator_key
-        == indicator_key.strip()
-    )
-
-
-def matches_severity(
-    self,
-    severity: ThreatSeverity,
-) -> bool:
-    """
-    Return True when the threat has the supplied severity.
-    """
-
-    return self.severity == severity
-
-
-def matches_confidence(
-    self,
-    confidence: ThreatConfidence,
-) -> bool:
-    """
-    Return True when the threat has the supplied confidence.
-    """
-
-    return self.confidence == confidence
-
-
-# =============================================================================
-# Context Matching
-# =============================================================================
-
-
-def affects_account(
-    self,
-    account_id: str,
-) -> bool:
-    """
-    Return True when the threat affects the supplied account.
-    """
-
-    if self.context.account_id is None:
-        return False
-
-    return (
-        self.context.account_id
-        == account_id.strip()
-    )
-
-
-def affects_resource(
-    self,
-    resource_id: str,
-) -> bool:
-    """
-    Return True when the threat affects the supplied resource.
-    """
-
-    if self.context.resource_id is None:
-        return False
-
-    return (
-        self.context.resource_id
-        == resource_id.strip()
-    )
-
-
-def affects_repository(
-    self,
-    repository: str,
-) -> bool:
-    """
-    Return True when the threat affects the supplied repository.
-    """
-
-    if self.context.repository is None:
-        return False
-
-    return (
-        self.context.repository.casefold()
-        == repository.strip().casefold()
-    )
-
-
-def affects_user(
-    self,
-    user_id: str,
-) -> bool:
-    """
-    Return True when the threat affects the supplied identity.
-    """
-
-    if self.context.user_id is None:
-        return False
-
-    return (
-        self.context.user_id.casefold()
-        == user_id.strip().casefold()
-    )
-
-
-# =============================================================================
-# Description
-# =============================================================================
-
-
-def describe(self) -> str:
-    """
-    Return a concise human-readable description of the threat.
-
-    This method is intended for:
-
-        • Logs
-        • Diagnostics
-        • CLI output
-        • Testing
-
-    It is not a ThreatSummary.
-
-    ThreatSummary is a communication model intended for
-    human-facing reporting.
-    """
-
-    return (
-        f"{self.condition.value} "
-        f"[severity={self.severity.value}, "
-        f"confidence={self.confidence.value}, "
-        f"evidence={self.evidence_count}, "
-        f"providers={self.provider_count}]"
-    )
-
-
-# =============================================================================
-# Serialization
-# =============================================================================
-
-
-def to_dict(self) -> dict[str, Any]:
-    """
-    Convert the Threat into a serializable dictionary.
-
-    Derived counts are included for convenience.
-
-    The underlying evidence_ids and provider_names remain
-    the authoritative provenance values.
-    """
-
-    return {
-        "identity": {
-            "threat_id":
-                self.identity.threat_id,
-
-            "condition":
-                self.identity.condition.value,
-
-            "indicator_key":
-                self.identity.indicator_key,
-
-            "created_at":
-                self.identity.created_at.isoformat(),
-
-            "updated_at":
-                self.identity.updated_at.isoformat(),
-        },
-
-        "assessment": {
-            "severity":
-                self.assessment.severity.value,
-
-            "confidence":
-                self.assessment.confidence.value,
-
-            "assessment":
-                self.assessment.assessment.value,
-        },
-
-        "context": {
-            "account_id":
-                self.context.account_id,
-
-            "region":
-                self.context.region,
-
-            "resource_id":
-                self.context.resource_id,
-
-            "repository":
-                self.context.repository,
-
-            "user_id":
-                self.context.user_id,
-
-            "metadata":
-                dict(self.context.metadata),
-        },
-
-        "provenance": {
-            "evidence_ids":
-                sorted(
-                    self.provenance.evidence_ids
-                ),
-
-            "provider_names":
-                sorted(
-                    self.provenance.provider_names
-                ),
-
-            "evidence_count":
-                self.provenance.evidence_count,
-
-            "provider_count":
-                self.provenance.provider_count,
-
-            "assessment_id":
-                self.provenance.assessment_id,
-        },
-    }
 
 
 # =============================================================================
