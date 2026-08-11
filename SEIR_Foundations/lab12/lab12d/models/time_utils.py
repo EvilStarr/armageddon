@@ -11,39 +11,25 @@ Module:
 Overview
 -------------------------------------------------------------------------------
 
-Shared time helpers for the models package.
+Compatibility re-export.
 
-Every timestamp within Gen2X should be timezone-aware UTC.
+The canonical implementation of utc_now() lives in utils/time.py so that
+every package (models, agents, providers) shares one definition.
 
-Consistent timestamps make evidence easier to correlate across providers,
-cloud platforms, and geographic regions.
+This module remains so existing imports continue to work:
 
-Note
+    from models.time_utils import utc_now
 
-    datetime.utcnow() returns a NAIVE datetime and is deprecated in
-    modern Python.
+New code should prefer:
 
-    utc_now() returns an AWARE datetime.
-
-    Naive and aware datetimes cannot be compared or subtracted.
-
-    Mixing them raises TypeError at runtime.
+    from utils.time import utc_now
 
 ===============================================================================
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-
-def utc_now() -> datetime:
-    """
-    Return the current timezone-aware UTC timestamp.
-    """
-
-    return datetime.now(timezone.utc)
-
+from utils.time import utc_now
 
 __all__ = [
     "utc_now",
