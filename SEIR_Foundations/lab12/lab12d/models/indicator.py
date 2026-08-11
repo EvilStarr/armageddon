@@ -41,7 +41,9 @@ Fusion evaluates that evidence later.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from pydantic import Field, field_validator
+
+from models.base_model import Gen2XModel
 from datetime import datetime
 from hashlib import sha256
 from typing import Any
@@ -60,8 +62,7 @@ from utils.time import utc_now
 # =============================================================================
 
 
-@dataclass(slots=True)
-class IndicatorIdentity:
+class IndicatorIdentity(Gen2XModel):
     """
     Identifies one security-relevant object.
 
@@ -80,9 +81,29 @@ class IndicatorIdentity:
 
     source: IndicatorSource
 
-    indicator_id: str = field(
+    indicator_id: str = Field(
         default_factory=lambda: str(uuid4())
     )
+
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("value")
+    @classmethod
+    def validate_value(cls, value: str) -> str:
+        """
+        Normalize and validate the indicator value.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Indicator value cannot be empty."
+            )
+
+        return value
 
     # =========================================================================
     # Normalization
@@ -152,8 +173,7 @@ class IndicatorIdentity:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class IndicatorContext:
+class IndicatorContext(Gen2XModel):
     """
     Describes where and when an indicator appeared.
 
@@ -163,11 +183,11 @@ class IndicatorContext:
     within AWS, Azure, GCP, GitHub, or on-premises environments.
     """
 
-    first_seen: datetime = field(
+    first_seen: datetime = Field(
         default_factory=utc_now
     )
 
-    last_seen: datetime = field(
+    last_seen: datetime = Field(
         default_factory=utc_now
     )
 
@@ -185,8 +205,7 @@ class IndicatorContext:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class IndicatorMetadata:
+class IndicatorMetadata(Gen2XModel):
     """
     Stores optional enrichment associated with an indicator.
 
@@ -194,11 +213,11 @@ class IndicatorMetadata:
     the fundamental identity of the indicator.
     """
 
-    tags: set[str] = field(
+    tags: set[str] = Field(
         default_factory=set
     )
 
-    attributes: dict[str, Any] = field(
+    attributes: dict[str, Any] = Field(
         default_factory=dict
     )
 

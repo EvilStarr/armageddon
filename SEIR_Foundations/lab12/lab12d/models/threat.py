@@ -36,7 +36,9 @@ It does not perform threat analysis itself.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from pydantic import Field, field_validator, model_validator
+
+from models.base_model import Gen2XModel
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
@@ -58,8 +60,7 @@ from utils.time import utc_now
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ThreatIdentity:
+class ThreatIdentity(Gen2XModel):
     """
     Identifies one threat known to Gen2X.
 
@@ -81,19 +82,71 @@ class ThreatIdentity:
 
     condition: ThreatCondition
 
-    threat_id: str = field(
+    threat_id: str = Field(
         default_factory=lambda: str(uuid4())
     )
 
     indicator_key: str | None = None
 
-    created_at: datetime = field(
+    created_at: datetime = Field(
         default_factory=utc_now
     )
 
-    updated_at: datetime = field(
+    updated_at: datetime = Field(
         default_factory=utc_now
     )
+
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("threat_id")
+    @classmethod
+    def validate_threat_id(cls, value: str) -> str:
+        """
+        Normalize and validate the threat identifier.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "threat_id cannot be empty."
+            )
+
+        return value
+
+    @field_validator("indicator_key")
+    @classmethod
+    def normalize_indicator_key(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        """
+        Normalize the optional indicator key.
+
+        Blank values become None.
+        """
+
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        return value or None
+
+    @model_validator(mode="after")
+    def validate_timeline(self) -> "ThreatIdentity":
+        """
+        Validate that the identity timeline is coherent.
+        """
+
+        if self.updated_at < self.created_at:
+            raise ValueError(
+                "updated_at cannot occur before created_at."
+            )
+
+        return self
 
 
 # =============================================================================
@@ -101,8 +154,7 @@ class ThreatIdentity:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ThreatAssessment:
+class ThreatAssessment(Gen2XModel):
     """
     Represents Fusion's current assessment of a threat.
 
@@ -149,8 +201,7 @@ class ThreatAssessment:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ThreatContext:
+class ThreatContext(Gen2XModel):
     """
     Describes the environment affected by a threat.
 
@@ -179,7 +230,7 @@ class ThreatContext:
 
     user_id: str | None = None
 
-    metadata: dict[str, Any] = field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict
     )
 
@@ -189,8 +240,7 @@ class ThreatContext:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class ThreatProvenance:
+class ThreatProvenance(Gen2XModel):
     """
     Records the evidence supporting a threat.
 
@@ -206,15 +256,38 @@ class ThreatProvenance:
     Fusion owns that responsibility.
     """
 
-    evidence_ids: set[str] = field(
+    evidence_ids: set[str] = Field(
         default_factory=set
     )
 
-    provider_names: set[str] = field(
+    provider_names: set[str] = Field(
         default_factory=set
     )
 
     assessment_id: str | None = None
+
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("assessment_id")
+    @classmethod
+    def normalize_assessment_id(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        """
+        Normalize the optional assessment identifier.
+
+        Blank values become None.
+        """
+
+        if value is None:
+            return None
+
+        value = value.strip()
+
+        return value or None
 
     # =========================================================================
     # Derived Properties
@@ -398,8 +471,7 @@ class ThreatProvenance:
 # =============================================================================
 
 
-@dataclass(slots=True)
-class Threat:
+class Threat(Gen2XModel):
     """
     Represents one security threat known to Gen2X.
 
@@ -423,61 +495,28 @@ class Threat:
 
     assessment: ThreatAssessment
 
-    context: ThreatContext = field(
+    context: ThreatContext = Field(
         default_factory=ThreatContext
     )
 
-    provenance: ThreatProvenance = field(
+    provenance: ThreatProvenance = Field(
         default_factory=ThreatProvenance
     )
 
     # =========================================================================
     # Validation
     # =========================================================================
-
-    def __post_init__(self) -> None:
-        """
-        Validate the Threat model.
-
-        Threat protects itself from obviously invalid state without
-        attempting to validate Fusion's reasoning.
-        """
-
-        self.identity.threat_id = (
-            self.identity.threat_id.strip()
-        )
-
-        if not self.identity.threat_id:
-            raise ValueError(
-                "threat_id cannot be empty."
-            )
-
-        if (
-            self.identity.updated_at
-            <
-            self.identity.created_at
-        ):
-            raise ValueError(
-                "updated_at cannot occur before created_at."
-            )
-
-        if self.identity.indicator_key is not None:
-
-            self.identity.indicator_key = (
-                self.identity.indicator_key.strip()
-            )
-
-            if not self.identity.indicator_key:
-                self.identity.indicator_key = None
-
-        if self.provenance.assessment_id is not None:
-
-            self.provenance.assessment_id = (
-                self.provenance.assessment_id.strip()
-            )
-
-            if not self.provenance.assessment_id:
-                self.provenance.assessment_id = None
+    #
+    # Validation lives where the fields live:
+    #
+    #     ThreatIdentity validates threat_id, indicator_key, and the
+    #     created_at / updated_at timeline.
+    #
+    #     ThreatProvenance normalizes assessment_id.
+    #
+    # Composing validated components requires no additional rules here.
+    #
+    # =========================================================================
 
     # =========================================================================
     # Identity Properties
@@ -1016,86 +1055,16 @@ class Threat:
     # =============================================================================
 
 
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert the Threat into a serializable dictionary.
-
-        Derived counts are included for convenience.
-
-        The underlying evidence_ids and provider_names remain
-        the authoritative provenance values.
-        """
-
-        return {
-            "identity": {
-                "threat_id":
-                    self.identity.threat_id,
-
-                "condition":
-                    self.identity.condition.value,
-
-                "indicator_key":
-                    self.identity.indicator_key,
-
-                "created_at":
-                    self.identity.created_at.isoformat(),
-
-                "updated_at":
-                    self.identity.updated_at.isoformat(),
-            },
-
-            "assessment": {
-                "severity":
-                    self.assessment.severity.value,
-
-                "confidence":
-                    self.assessment.confidence.value,
-
-                "assessment":
-                    self.assessment.assessment.value,
-            },
-
-            "context": {
-                "account_id":
-                    self.context.account_id,
-
-                "region":
-                    self.context.region,
-
-                "resource_id":
-                    self.context.resource_id,
-
-                "repository":
-                    self.context.repository,
-
-                "user_id":
-                    self.context.user_id,
-
-                "metadata":
-                    dict(self.context.metadata),
-            },
-
-            "provenance": {
-                "evidence_ids":
-                    sorted(
-                        self.provenance.evidence_ids
-                    ),
-
-                "provider_names":
-                    sorted(
-                        self.provenance.provider_names
-                    ),
-
-                "evidence_count":
-                    self.provenance.evidence_count,
-
-                "provider_count":
-                    self.provenance.provider_count,
-
-                "assessment_id":
-                    self.provenance.assessment_id,
-            },
-        }
+    # to_dict(), to_json(), and from_dict() are inherited from Gen2XModel.
+    #
+    # The inherited implementations understand nested models,
+    # enumerations, and datetimes in both directions:
+    #
+    #     threat == Threat.from_dict(threat.to_dict())
+    #
+    # Derived counts (evidence_count, provider_count) remain available
+    # as properties rather than serialized fields, so the round trip
+    # stays lossless.
 
 
 # =============================================================================
