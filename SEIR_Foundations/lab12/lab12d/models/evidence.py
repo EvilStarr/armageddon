@@ -29,12 +29,12 @@ testable, and reusable across providers.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from pydantic import Field, field_validator, model_validator
 from datetime import datetime
 from hashlib import sha256
 from typing import Any
 
-from models.base_model import BaseModel
+from models.base_model import Gen2XModel
 from models.enums import (
     IndicatorSource,
     IndicatorType,
@@ -53,8 +53,7 @@ from models.time_utils import utc_now
 # =============================================================================
 
 
-@dataclass
-class EvidenceIdentity(BaseModel):
+class EvidenceIdentity(Gen2XModel):
     """
     Identifies one provider observation.
 
@@ -73,13 +72,33 @@ class EvidenceIdentity(BaseModel):
 
     provider_version: str = "1.0.0"
 
-    observed_at: datetime = field(
+    observed_at: datetime = Field(
         default_factory=utc_now
     )
 
-    collected_at: datetime = field(
+    collected_at: datetime = Field(
         default_factory=utc_now
     )
+
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("provider_name")
+    @classmethod
+    def validate_provider_name(cls, value: str) -> str:
+        """
+        Normalize and validate the provider name.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "provider_name cannot be empty."
+            )
+
+        return value
 
     @property
     def observation_key(self) -> str:
@@ -126,8 +145,7 @@ class EvidenceIdentity(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class EvidenceIndicator(BaseModel):
+class EvidenceIndicator(Gen2XModel):
     """
     Represents what the provider observed.
 
@@ -144,14 +162,33 @@ class EvidenceIndicator(BaseModel):
 
     condition: ThreatCondition
 
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("indicator_value")
+    @classmethod
+    def validate_indicator_value(cls, value: str) -> str:
+        """
+        Normalize and validate the observed indicator value.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "indicator_value cannot be empty."
+            )
+
+        return value
+
 
 # =============================================================================
 # Evidence Source
 # =============================================================================
 
 
-@dataclass
-class EvidenceSource(BaseModel):
+class EvidenceSource(Gen2XModel):
     """
     Describes where the observation originated.
 
@@ -171,7 +208,7 @@ class EvidenceSource(BaseModel):
 
     ip_address: str | None = None
 
-    metadata: dict[str, Any] = field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict
     )
 
@@ -181,8 +218,7 @@ class EvidenceSource(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class EvidenceContext(BaseModel):
+class EvidenceContext(Gen2XModel):
     """
     Provides additional context for an observation.
 
@@ -205,7 +241,7 @@ class EvidenceContext(BaseModel):
 
     expires_at: datetime | None = None
 
-    tags: set[str] = field(
+    tags: set[str] = Field(
         default_factory=set
     )
 
@@ -266,8 +302,7 @@ class EvidenceContext(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class ThreatEvidence(BaseModel):
+class ThreatEvidence(Gen2XModel):
     """
     Represents one normalized security observation.
 
@@ -288,43 +323,33 @@ class ThreatEvidence(BaseModel):
 
     indicator: EvidenceIndicator
 
-    source: EvidenceSource = field(
+    source: EvidenceSource = Field(
         default_factory=EvidenceSource
     )
 
-    context: EvidenceContext = field(
+    context: EvidenceContext = Field(
         default_factory=EvidenceContext
     )
 
     # =========================================================================
     # Validation
     # =========================================================================
+    #
+    # Field-level rules live on the component models:
+    #
+    #     EvidenceIdentity validates provider_name.
+    #
+    #     EvidenceIndicator validates indicator_value.
+    #
+    # Only the rule that spans components lives here.
+    #
+    # =========================================================================
 
-    def validate(self) -> None:
+    @model_validator(mode="after")
+    def validate_expiry(self) -> "ThreatEvidence":
         """
-        Validate the ThreatEvidence model.
-
-        BaseModel.__post_init__() calls this hook automatically
-        after construction.
+        Validate rules that span multiple components.
         """
-
-        self.identity.provider_name = (
-            self.identity.provider_name.strip()
-        )
-
-        self.indicator.indicator_value = (
-            self.indicator.indicator_value.strip()
-        )
-
-        if not self.identity.provider_name:
-            raise ValueError(
-                "provider_name cannot be empty."
-            )
-
-        if not self.indicator.indicator_value:
-            raise ValueError(
-                "indicator_value cannot be empty."
-            )
 
         if (
             self.context.expires_at is not None
@@ -335,6 +360,8 @@ class ThreatEvidence(BaseModel):
             raise ValueError(
                 "expires_at must occur after observed_at."
             )
+
+        return self
 
     # =========================================================================
     # Forwarding Properties
@@ -498,7 +525,7 @@ class ThreatEvidence(BaseModel):
     # Serialization
     # =========================================================================
     #
-    # to_dict(), to_json(), and from_dict() are inherited from BaseModel.
+    # to_dict(), to_json(), and from_dict() are inherited from Gen2XModel.
     #
     # The inherited implementations understand nested models,
     # enumerations, and datetimes in both directions:

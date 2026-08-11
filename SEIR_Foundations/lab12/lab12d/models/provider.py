@@ -52,11 +52,11 @@ They do not execute provider logic.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from pydantic import Field, field_validator
 from datetime import datetime
 from typing import Any
 
-from models.base_model import BaseModel
+from models.base_model import Gen2XModel
 from models.enums import (
     IndicatorType,
     PlatformType,
@@ -73,8 +73,7 @@ from models.time_utils import utc_now
 # =============================================================================
 
 
-@dataclass
-class ProviderIdentity(BaseModel):
+class ProviderIdentity(Gen2XModel):
     """
     Represents the identity of a security provider.
 
@@ -97,14 +96,33 @@ class ProviderIdentity(BaseModel):
 
     description: str = ""
 
+    # =========================================================================
+    # Validation
+    # =========================================================================
+
+    @field_validator("name", "display_name")
+    @classmethod
+    def validate_names(cls, value: str) -> str:
+        """
+        Normalize and validate provider names.
+        """
+
+        value = value.strip()
+
+        if not value:
+            raise ValueError(
+                "Provider names cannot be empty."
+            )
+
+        return value
+
 
 # =============================================================================
 # Provider Capabilities
 # =============================================================================
 
 
-@dataclass
-class ProviderCapabilities(BaseModel):
+class ProviderCapabilities(Gen2XModel):
     """
     Describes what a provider is capable of detecting.
 
@@ -112,11 +130,11 @@ class ProviderCapabilities(BaseModel):
     its implementation.
     """
 
-    supported_indicators: set[IndicatorType] = field(
+    supported_indicators: set[IndicatorType] = Field(
         default_factory=set
     )
 
-    supported_conditions: set[ThreatCondition] = field(
+    supported_conditions: set[ThreatCondition] = Field(
         default_factory=set
     )
 
@@ -136,8 +154,7 @@ class ProviderCapabilities(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class ProviderHealth(BaseModel):
+class ProviderHealth(Gen2XModel):
     """
     Represents the operational health of a provider.
 
@@ -165,8 +182,7 @@ class ProviderHealth(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class ProviderStatistics(BaseModel):
+class ProviderStatistics(Gen2XModel):
     """
     Operational statistics collected for one provider.
 
@@ -190,8 +206,7 @@ class ProviderStatistics(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class ProviderConfiguration(BaseModel):
+class ProviderConfiguration(Gen2XModel):
     """
     Configuration shared by provider implementations.
 
@@ -201,13 +216,13 @@ class ProviderConfiguration(BaseModel):
 
     enabled: bool = True
 
-    timeout_seconds: int = 30
+    timeout_seconds: int = Field(default=30, gt=0)
 
-    retry_limit: int = 3
+    retry_limit: int = Field(default=3, ge=0)
 
     region: str | None = None
 
-    metadata: dict[str, Any] = field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict
     )
 
@@ -274,8 +289,7 @@ class ProviderConfiguration(BaseModel):
 # =============================================================================
 
 
-@dataclass
-class Provider(BaseModel):
+class Provider(Gen2XModel):
     """
     Represents one security provider within the Gen2X platform.
 
@@ -297,53 +311,28 @@ class Provider(BaseModel):
 
     configuration: ProviderConfiguration
 
-    health: ProviderHealth = field(
+    health: ProviderHealth = Field(
         default_factory=ProviderHealth
     )
 
-    statistics: ProviderStatistics = field(
+    statistics: ProviderStatistics = Field(
         default_factory=ProviderStatistics
     )
 
     # =========================================================================
     # Validation
     # =========================================================================
-
-    def validate(self) -> None:
-        """
-        Validate the Provider model.
-
-        Domain models should protect themselves from
-        obviously invalid state.
-
-        BaseModel.__post_init__() calls this hook automatically
-        after construction.
-        """
-
-        self.identity.name = self.identity.name.strip()
-        self.identity.display_name = (
-            self.identity.display_name.strip()
-        )
-
-        if not self.identity.name:
-            raise ValueError(
-                "Provider name cannot be empty."
-            )
-
-        if not self.identity.display_name:
-            raise ValueError(
-                "Provider display_name cannot be empty."
-            )
-
-        if self.configuration.timeout_seconds <= 0:
-            raise ValueError(
-                "timeout_seconds must be greater than zero."
-            )
-
-        if self.configuration.retry_limit < 0:
-            raise ValueError(
-                "retry_limit cannot be negative."
-            )
+    #
+    # Validation lives where the fields live:
+    #
+    #     ProviderIdentity validates its names.
+    #
+    #     ProviderConfiguration constrains timeout_seconds (gt=0)
+    #     and retry_limit (ge=0) directly on the field declarations.
+    #
+    # Composing validated components requires no additional rules here.
+    #
+    # =========================================================================
 
     # =========================================================================
     # Convenience Properties
@@ -558,7 +547,7 @@ class Provider(BaseModel):
     # Serialization
     # =========================================================================
     #
-    # to_dict(), to_json(), and from_dict() are inherited from BaseModel.
+    # to_dict(), to_json(), and from_dict() are inherited from Gen2XModel.
     #
     # The inherited implementations understand nested models,
     # enumerations, and datetimes in both directions:
