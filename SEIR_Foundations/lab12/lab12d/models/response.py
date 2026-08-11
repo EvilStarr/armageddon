@@ -567,10 +567,17 @@ class ResponseRecommendation(BaseModel):
 # =============================================================================
 
 
+# Aliased imports:
+#
+#   ResponseApproval is the approval-state vocabulary; response models
+#   refer to it as ApprovalStatus (ApprovalMode holds the requirement).
+#
+#   ResponseMode describes how a response is executed; response models
+#   refer to it as ExecutionMode.
+from models.enums import ResponseApproval as ApprovalStatus
+from models.enums import ResponseMode as ExecutionMode
 from models.enums import (
     ApprovalMode,
-    ApprovalStatus,
-    ExecutionMode,
     InvestigationStatus,
 )
 

@@ -55,10 +55,17 @@ from pydantic import (
     field_validator,
 )
 
+# Aliased imports:
+#
+#   ResponseApproval is the approval-state vocabulary; report models
+#   refer to it as ApprovalStatus.
+#
+#   The ReportAudience enum is aliased because this module defines a
+#   ReportAudience model of its own.
+from models.enums import ReportAudience as ReportAudienceType
+from models.enums import ResponseApproval as ApprovalStatus
 from models.enums import (
-    ApprovalStatus,
     InvestigationStatus,
-    ReportAudienceType,
     ReportTechnicalLevel,
     ReportType,
     ResponseAction,
