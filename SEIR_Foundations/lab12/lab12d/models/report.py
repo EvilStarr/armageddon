@@ -49,11 +49,11 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import (
-    BaseModel,
-    ConfigDict,
     Field,
     field_validator,
 )
+
+from models.base_model import Gen2XModel
 
 # Aliased imports:
 #
@@ -83,7 +83,7 @@ from utils.time import utc_now
 # =============================================================================
 
 
-class ReportIdentity(BaseModel):
+class ReportIdentity(Gen2XModel):
     """
     Identifies one report produced by Gen2X.
 
@@ -99,11 +99,6 @@ class ReportIdentity(BaseModel):
     response_id remains optional because a report may be created before
     a response recommendation exists.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     report_id: UUID = Field(
         default_factory=uuid4
@@ -186,7 +181,7 @@ class ReportIdentity(BaseModel):
 # =============================================================================
 
 
-class ReportAudience(BaseModel):
+class ReportAudience(Gen2XModel):
     """
     Describes the intended audience for a report.
 
@@ -206,11 +201,6 @@ class ReportAudience(BaseModel):
 
     Audience must never change facts.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     audience: ReportAudienceType
 
@@ -263,7 +253,7 @@ class ReportAudience(BaseModel):
 # =============================================================================
 
 
-class ExecutiveSummary(BaseModel):
+class ExecutiveSummary(Gen2XModel):
     """
     Provides a concise leadership-facing summary of the report.
 
@@ -282,11 +272,6 @@ class ExecutiveSummary(BaseModel):
 
     It must not independently calculate severity or invent facts.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     headline: str
 
@@ -378,7 +363,7 @@ class ExecutiveSummary(BaseModel):
 # =============================================================================
 
 
-class ThreatSummary(BaseModel):
+class ThreatSummary(Gen2XModel):
     """
     Provides a human-readable projection of a Threat.
 
@@ -389,11 +374,6 @@ class ThreatSummary(BaseModel):
 
     Threat remains the authoritative domain representation.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     title: str
 
@@ -484,7 +464,7 @@ class ThreatSummary(BaseModel):
 # =============================================================================
 
 
-class ResponseSummary(BaseModel):
+class ResponseSummary(Gen2XModel):
     """
     Provides a human-readable projection of a Response.
 
@@ -500,11 +480,6 @@ class ResponseSummary(BaseModel):
 
     It does not independently determine authorization.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     action: ResponseAction
 
@@ -831,7 +806,7 @@ class ResponseSummary(BaseModel):
 # =============================================================================
 
 
-class ReportFinding(BaseModel):
+class ReportFinding(Gen2XModel):
     """
     Represents one security finding contained within a report.
 
@@ -845,11 +820,6 @@ class ReportFinding(BaseModel):
     Severity and confidence should originate from the authoritative
     Threat or assessment domain state.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     finding_id: UUID = Field(
         default_factory=uuid4
@@ -979,7 +949,7 @@ class ReportFinding(BaseModel):
 # =============================================================================
 
 
-class ReportEvidenceSummary(BaseModel):
+class ReportEvidenceSummary(Gen2XModel):
     """
     Provides a concise representation of the evidence supporting
     the report.
@@ -998,11 +968,6 @@ class ReportEvidenceSummary(BaseModel):
         • Was corroboration observed?
         • Were conflicts detected?
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     evidence_ids: list[str] = Field(
         default_factory=list
@@ -1208,7 +1173,7 @@ class ReportEvidenceSummary(BaseModel):
 # =============================================================================
 
 
-class ReportAccountability(BaseModel):
+class ReportAccountability(Gen2XModel):
     """
     Records human and system accountability associated with a report.
 
@@ -1227,11 +1192,6 @@ class ReportAccountability(BaseModel):
     Execution accountability should be added only when the response
     execution layer exists.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     investigation_owner: str | None = None
 
@@ -1638,7 +1598,7 @@ from models.enums import ReportStatus
 # =============================================================================
 
 
-class Report(BaseModel):
+class Report(Gen2XModel):
     """
     Represents one complete human-facing security report.
 
@@ -1678,11 +1638,6 @@ class Report(BaseModel):
 
     Material corrections should result in a new report or revision.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     identity: ReportIdentity
 

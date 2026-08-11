@@ -45,11 +45,11 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from pydantic import (
-    BaseModel,
-    ConfigDict,
     Field,
     field_validator,
 )
+
+from models.base_model import Gen2XModel
 
 from models.enums import (
     ResponseAction,
@@ -64,7 +64,7 @@ from utils.time import utc_now
 # =============================================================================
 
 
-class ResponseIdentity(BaseModel):
+class ResponseIdentity(Gen2XModel):
     """
     Identifies one response recommendation known to Gen2X.
 
@@ -76,11 +76,6 @@ class ResponseIdentity(BaseModel):
     assessment_id optionally connects the response to the Fusion
     assessment responsible for the recommendation.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     response_id: UUID = Field(
         default_factory=uuid4
@@ -159,7 +154,7 @@ class ResponseIdentity(BaseModel):
 # =============================================================================
 
 
-class ResponseTarget(BaseModel):
+class ResponseTarget(Gen2XModel):
     """
     Describes the object that would be affected by a response.
 
@@ -176,11 +171,6 @@ class ResponseTarget(BaseModel):
     A target may represent a resource, identity, repository,
     endpoint, indicator, or some combination of those concepts.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     indicator_key: str | None = None
 
@@ -294,7 +284,7 @@ class ResponseTarget(BaseModel):
 # =============================================================================
 
 
-class ResponseRecommendation(BaseModel):
+class ResponseRecommendation(Gen2XModel):
     """
     Represents what Gen2X recommends doing about a threat.
 
@@ -311,11 +301,6 @@ class ResponseRecommendation(BaseModel):
 
     Execution belongs to a separate response executor.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     action: ResponseAction
 
@@ -587,7 +572,7 @@ from models.enums import (
 # =============================================================================
 
 
-class InvestigationState(BaseModel):
+class InvestigationState(Gen2XModel):
     """
     Represents the operational lifecycle of a security investigation.
 
@@ -610,11 +595,6 @@ class InvestigationState(BaseModel):
     New evidence may cause an investigation to move backward,
     reopen, or continue after remediation.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     status: InvestigationStatus = (
         InvestigationStatus.NEW
@@ -934,7 +914,7 @@ class InvestigationState(BaseModel):
 # =============================================================================
 
 
-class ResponseGovernance(BaseModel):
+class ResponseGovernance(Gen2XModel):
     """
     Represents the authorization boundary surrounding a response.
 
@@ -947,11 +927,6 @@ class ResponseGovernance(BaseModel):
     A response may be technically appropriate while still requiring
     human approval, business authorization, or manual execution.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     approval_mode: ApprovalMode
 
@@ -1373,7 +1348,7 @@ class ResponseGovernance(BaseModel):
 # =============================================================================
 
 
-class Response(BaseModel):
+class Response(Gen2XModel):
     """
     Represents one complete response recommendation within Gen2X.
 
@@ -1396,11 +1371,6 @@ class Response(BaseModel):
 
     Execution belongs to a separate response executor.
     """
-
-    model_config = ConfigDict(
-        validate_assignment=True,
-        extra="forbid",
-    )
 
     identity: ResponseIdentity
 
